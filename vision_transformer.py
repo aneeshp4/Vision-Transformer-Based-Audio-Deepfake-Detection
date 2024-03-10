@@ -121,7 +121,8 @@ class VisionTransformer(nn.Module):
                  drop_path_rate=0., norm_layer=nn.LayerNorm, **kwargs):
         super().__init__()
         self.num_features = self.embed_dim = embed_dim
-
+        self.audio_size = audio_size
+        self.patch_size = patch_size
         self.patch_embed = PatchEmbed(
             img_size=audio_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches
@@ -130,7 +131,7 @@ class VisionTransformer(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
 
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         self.blocks = nn.ModuleList([
             Block(
                 dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
@@ -154,14 +155,39 @@ class VisionTransformer(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
+    def interpolate_pos_encoding(self, x, w, h):
+        npatch = (w/16)*(h/16)
+        N = self.pos_embed.shape[1] - 1
+        if npatch == N:
+            return self.pos_embed
+        
+        class_pos_embed = self.pos_embed[:, 0]
+        patch_pos_embed = self.pos_embed[:, 1:]
+        
+        sz1 = w//self.patch_size[0]
+        sz2 = h//self.patch_size[0]
+        
+        prev_sz1 = self.audio_size[0]//self.patch_size[0]
+        prev_sz2 = self.audio_size[1]//self.patch_size[1]
+        patch_pos_embed = torch.nn.functional.interpolate(
+            patch_pos_embed.transpose(1, 2).reshape(1, self.embed_dim, prev_sz1, prev_sz2), size=(sz1, sz2), mode='bicubic', align_corners=False)
+        
+
+        patch_pos_embed = patch_pos_embed.reshape(1, self.embed_dim, sz1*sz2).transpose(1, 2)
+
+        return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1)
+
     def prepare_tokens(self, x):
         B, nc, w, h = x.shape
-        x = self.patch_embed(x)
+        x = self.patch_embed(x)  # patch linear embedding
 
+        # add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
 
-        x = x + self.pos_embed
+        # add positional encoding to each token
+        x = x + self.interpolate_pos_encoding(x, w, h)
+        #x = x + self.pos_embed
         return self.pos_drop(x)
 
     def forward(self, x, classify=False):
@@ -169,11 +195,35 @@ class VisionTransformer(nn.Module):
         for blk in self.blocks:
             x = blk(x)
         x = self.norm(x)
-        
         if classify==True:
             return self.head(x[:, 0])
         return x
 
+    def get_last_selfattention(self, x):
+        x = self.prepare_tokens(x)
+        for i, blk in enumerate(self.blocks):
+            if i < len(self.blocks) - 1:
+                x = blk(x)
+            else:
+                # return attention of the last block
+                return blk(x, return_attention=True)
+
+    def get_intermediate_layers(self, x, n=1):
+        x = self.prepare_tokens(x)
+        # we return the output tokens from the `n` last blocks
+        output = []
+        for i, blk in enumerate(self.blocks):
+            x = blk(x)
+            if len(self.blocks) - i <= n:
+                output.append(self.norm(x))
+        return output
+
+
+def vit_tiny(patch_size=16, **kwargs):
+    model = VisionTransformer(
+        patch_size=patch_size, embed_dim=192, depth=12, num_heads=3, mlp_ratio=4,
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    return model
 
 def vit_small(patch_size=[16, 16], audio_size=[1024, 128], stride=[16, 16], **kwargs):
     model = VisionTransformer(
@@ -189,27 +239,27 @@ def vit_base(patch_size=[16, 16], audio_size=[1024, 128], stride=[16, 16], **kwa
 
 
 class CLSHead(nn.Module):
-    def __init__(self, in_dim, out_dim_cls, out_dim_data, hidden_dim=2048, bottleneck_dim=256):
+    def __init__(self, in_dim, out_dim, use_bn=False, norm_last_layer=True, nlayers=3, hidden_dim=2048, bottleneck_dim=256):
         super().__init__()
-        
-        layers = [nn.Linear(in_dim, hidden_dim)]
-        layers.append(nn.GELU())
-        layers.append(nn.Linear(hidden_dim, hidden_dim))
-        layers.append(nn.GELU())
-        layers.append(nn.Linear(hidden_dim, bottleneck_dim))
-        self.mlp = nn.Sequential(*layers)
-        
+        nlayers = max(nlayers, 1)
+        if nlayers == 1:
+            self.mlp = nn.Linear(in_dim, bottleneck_dim)
+        else:
+            layers = [nn.Linear(in_dim, hidden_dim)]
+            if use_bn:
+                layers.append(nn.BatchNorm1d(hidden_dim))
+            layers.append(nn.GELU())
+            for _ in range(nlayers - 2):
+                layers.append(nn.Linear(hidden_dim, hidden_dim))
+                if use_bn:
+                    layers.append(nn.BatchNorm1d(hidden_dim))
+                layers.append(nn.GELU())
+            layers.append(nn.Linear(hidden_dim, bottleneck_dim))
+            self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
-        
-        self.cls_layer = nn.Linear(bottleneck_dim, out_dim_cls, bias=False)
-        self.cls_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim_cls, bias=False))
-        self.cls_layer.weight_g.data.fill_(1)
-        self.cls_layer.weight_g.requires_grad = False
-        
-        self.data_layer = nn.Linear(bottleneck_dim, out_dim_data, bias=False)
-        self.data_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim_data, bias=False))
-        self.data_layer.weight_g.data.fill_(1)
-        self.data_layer.weight_g.requires_grad = False
+        self.last_layer = nn.Linear(bottleneck_dim, out_dim, bias=False)
+        self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
+        self.last_layer.weight_g.data.fill_(1)
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -220,28 +270,30 @@ class CLSHead(nn.Module):
     def forward(self, x):
         x = self.mlp(x)
         x = nn.functional.normalize(x, dim=-1, p=2)
-        return self.cls_layer(x[:, 0]), self.data_layer(x[:, 1:])
+        return self.last_layer(x)
 
 
 class RECHead(nn.Module):
-    def __init__(self, in_dim, audio_size, hidden_dim=768, bottleneck_dim=128, in_chans=3, patch_size=16):
+    def __init__(self, in_dim, audio_size, in_chans=3, patch_size=16):
         super().__init__()
         
         self.audio_size = audio_size
         self.patch_size = patch_size
 
-        layers = [nn.Linear(in_dim, hidden_dim)]
+        layers = [nn.Linear(in_dim, in_dim)]
         layers.append(nn.GELU())
-        layers.append(nn.Linear(hidden_dim, hidden_dim))
+        layers.append(nn.Linear(in_dim, in_dim))
         layers.append(nn.GELU())
-        layers.append(nn.Linear(hidden_dim, bottleneck_dim))
+        layers.append(nn.Linear(in_dim, in_dim))
         layers.append(nn.GELU())
 
         self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
 
-        self.convTrans = nn.ConvTranspose2d(bottleneck_dim, in_chans, kernel_size=(patch_size, patch_size),
+        self.convTrans = nn.ConvTranspose2d(in_dim, in_chans, kernel_size=(patch_size, patch_size),
                                                 stride=(patch_size, patch_size))
+        
+
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
