@@ -1,14 +1,11 @@
 import csv
 import json
 import torchaudio
-import numpy as np
-import torch
-import torch.nn.functional
-from torch.utils.data import Dataset
-import random
-
 import os
 
+from torch.utils.data import Dataset
+
+ 
 def make_index_dict(label_csv):
     index_lookup = {}
     with open(label_csv, 'r') as f:
@@ -20,7 +17,7 @@ def make_index_dict(label_csv):
     return index_lookup
 
 class AudioDataset(Dataset):
-    def __init__(self, dataset_json_file, dataset_path, label_csv=None, transform=None):
+    def __init__(self, dataset_json_file, dataset_path, sample_rate=16000, label_csv=None, transform=None):
 
         self.dataset_path = dataset_path
         
@@ -29,22 +26,23 @@ class AudioDataset(Dataset):
 
         self.data = data_json['data']
 
+        self.sample_rate = sample_rate
         self.transform=transform
+        
+
 
 
     def __getitem__(self, index):
 
         file_path = os.path.join(self.dataset_path, self.data[index]['wav'])
-        waveform, _ = torchaudio.load(file_path)
+        waveform, sr = torchaudio.load(file_path)
+        resample_fn = torchaudio.transforms.Resample(sr, self.sample_rate)
+        waveform = resample_fn(waveform)
+        
         if waveform.shape[1] == 0:
             return (None, None, None), None
         
         if self.transform is not None:
-            
-            # randomly shift waveform
-            if random.random() > 0.5:
-                waveform = torch.roll(waveform, random.randint(0, waveform.size()[1]), 1)
-            
             waveform = self.transform(waveform)
             
         target = -1
