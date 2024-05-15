@@ -4,6 +4,7 @@ import torchaudio
 import os
 
 from torch.utils.data import Dataset
+import torch.nn.functional as F
 
  
 def make_index_dict(label_csv):
@@ -39,6 +40,14 @@ class AudioDataset(Dataset):
         resample_fn = torchaudio.transforms.Resample(sr, self.sample_rate)
         waveform = resample_fn(waveform)
         
+
+        max_length = 1600000  # For example, 10 minutes of audio at 16kHz
+        if waveform.shape[1] > max_length:
+            waveform = waveform[:, :max_length]  # Trimming
+        elif waveform.shape[1] < max_length:
+            padding = max_length - waveform.shape[1]
+            waveform = F.pad(waveform, (0, padding))  # Padding
+
         if waveform.shape[1] == 0:
             return (None, None, None), None
         

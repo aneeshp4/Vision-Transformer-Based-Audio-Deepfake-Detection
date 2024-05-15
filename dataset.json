@@ -1,0 +1,260 @@
+{
+    "data": [
+        {
+            "wav": "FAKE/linus-to-obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/obama-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/Obama-to-Trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-Obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-Trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-Obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-Biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/obama-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-trump.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/trump-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/obama-to-musk.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/linus-to-biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/margot-to-biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/obama-to-margot.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/obama-to-taylor.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/musk-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/taylor-to-obama.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/Obama-to-Biden.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/ryan-to-linus.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "FAKE/biden-to-ryan.wav",
+            "label": "FAKE"
+        },
+        {
+            "wav": "REAL/obama-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/musk-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/biden-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/margot-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/ryan-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/trump-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/taylor-original.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/linus-original.wav",
+            "label": "REAL"
+        }
+    ]
+}
