@@ -27,7 +27,7 @@ import numpy as np
 
 import dataloader
 from data_transformations import DataAugmentation
-import main_ASIT
+import main_ASiT
 import vision_transformer as vits
 from vision_transformer import CLSHead, RECHead
 
@@ -46,7 +46,7 @@ def get_args_parser():
 
 def load_pretrained_model(student, path):
     checkpoint = torch.load(path, map_location='cpu')
-    student.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    student.load_state_dict(checkpoint['student'], strict=False)
     print("Pre-trained model loaded from", path)
 
 def freeze_layers(model):
@@ -88,17 +88,17 @@ def main(args):
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
 
     # Data
-    transform = DataAugmentation(args)
-    dataset = dataloader.AudioDataset(args.data_train, args.data_path, sample_rate=args.sample_rate, transform=transform)
-    sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
+    # transform = DataAugmentation(args)
+    dataset = dataloader.AudioDataset(args.data_json, args.data_path)
+    # dist.init_process_group("nccl")
     data_loader = torch.utils.data.DataLoader(
         dataset,
-        sampler=sampler,
-        batch_size=args.batch_size,
-        num_workers=args.num_workers,
+        # sampler=sampler,
+        batch_size=16,
+        num_workers=4,
         pin_memory=True,
         drop_last=True,
-        collate_fn=main_ASIT.collate_batch(args.drop_replace, args.drop_align)
+        collate_fn=main_ASiT.collate_batch(0.3, 1)
     )
     print(f"Data loaded: there are {len(dataset)} images.")
 
