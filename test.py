@@ -27,7 +27,7 @@ import numpy as np
 
 import dataloader
 from data_transformations import DataAugmentation
-import utils
+import main_ASIT
 import vision_transformer as vits
 from vision_transformer import CLSHead, RECHead
 
@@ -37,6 +37,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('ASiT Fine-Tuning', add_help=False)
     # add necessary arguments
     parser.add_argument('--data_path', default='/path/to/data', type=str, help='Path to the dataset')
+    parser.add_argument('--data_json', default='/path/to/dataset.json', type=str, help='Path to the dataset JSON file')
     parser.add_argument('--ckpt_path', default='/path/to/pretrained/model.pth', type=str, help='Path to the pretrained model checkpoint')
     parser.add_argument('--output_dir', default='./fine_tune_checkpoints', type=str, help='Directory for output')
     parser.add_argument('--epochs', default=10, type=int, help='Number of epochs to fine-tune')
@@ -53,39 +54,59 @@ def freeze_layers(model):
         if 'head' not in name:  # Freeze layers that are not part of the classification head
             param.requires_grad = False
 
+def train_one_epoch(model, data_loader, optimizer, device, epoch):
+    model.train()
+    sampler = data_loader.sampler
+    sampler.set_epoch(epoch)  # Properly shuffle for distributed training
+
+    for i, (inputs, labels) in enumerate(data_loader):
+        if inputs is None:  # Skip batches with no valid data
+            continue
+        
+        inputs, labels = inputs.to(device), labels.to(device)
+        outputs = model(inputs)
+        loss = F.cross_entropy(outputs, labels)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if i % 10 == 0:  # Print loss every 10 batches
+            print(f'Epoch {epoch}, Batch {i}, Loss: {loss.item()}')
+
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
     # Load the pre-trained model
-    student = vits.__dict__['vit_base'](num_classes=1000)  # Adjust number of classes
-    load_pretrained_model(student, args.ckpt_path)
-    freeze_layers(student)
-    student.to(device)
+    model = vits.__dict__['vit_base'](num_classes=2)  # Adjust number of classes
+    load_pretrained_model(model, args.ckpt_path)
+    freeze_layers(model)
+    model.to(device)
 
     # Optimizer
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, student.parameters()), lr=args.lr)
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
 
     # Data
-    train_dataset = dataloader.YourDataset(args.data_path, transform=DataAugmentation())
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4)
+    transform = DataAugmentation(args)
+    dataset = dataloader.AudioDataset(args.data_train, args.data_path, sample_rate=args.sample_rate, transform=transform)
+    sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
+    data_loader = torch.utils.data.DataLoader(
+        dataset,
+        sampler=sampler,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        pin_memory=True,
+        drop_last=True,
+        collate_fn=main_ASIT.collate_batch(args.drop_replace, args.drop_align)
+    )
+    print(f"Data loaded: there are {len(dataset)} images.")
 
-    # Training loop
-    student.train()
     for epoch in range(args.epochs):
-        for images, labels in train_loader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = student(images)
-            loss = F.cross_entropy(outputs, labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        print(f'Epoch {epoch+1}, Loss: {loss.item()}')
+        train_one_epoch(model, data_loader, optimizer, device, epoch)
 
     # Save the fine-tuned model
-    torch.save(student.state_dict(), os.path.join(args.output_dir, 'fine_tuned.pth'))
+    torch.save(model.state_dict(), os.path.join(args.output_dir, 'fine_tuned.pth'))
     print("Fine-tuning completed and model saved.")
 
 if __name__ == '__main__':
