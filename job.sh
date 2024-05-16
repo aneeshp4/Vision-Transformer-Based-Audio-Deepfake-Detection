@@ -18,7 +18,7 @@
 #SBATCH --gres=gpu:k80:3
 
 # Walltime (job duration)
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 
 # Email notifications when the job starts and ends
 #SBATCH --mail-type=BEGIN,END,FAIL
