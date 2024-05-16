@@ -255,6 +255,78 @@
         {
             "wav": "REAL/linus-original.wav",
             "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1962_1022_cuba.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/dde_1961_0117.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1963_0726_testban.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1961_0427_press.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1962_0912_spaceeffort.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1961_0121_inaugural.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/fdr_13_1940_side_21b.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1963_0626_berliner.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1961_0525_moon.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk19631026.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1961_0109_cityuponahill.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/jfk_1963_0610_americancommencement.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/fdr_23_1940_1108_press_conference_694.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/dde_1953_0120.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/dde_1957_0105.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/dde_1953_0416.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/dde_1956_0823.wav",
+            "label": "REAL"
+        },
+        {
+            "wav": "REAL/fdr_17_1940_hull_conversation.wav",
+            "label": "REAL"
         }
     ]
 }
