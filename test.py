@@ -126,27 +126,30 @@ def freeze_layers(model):
 
 def train_one_epoch(model, data_loader, optimizer, device, epoch):
     model.train()
-    # sampler = data_loader.sampler
-    # sampler.set_epoch(epoch)  # Properly shuffle for distributed training
+    for batch_idx, ((clean_crops, corrupted_crops, masks_crops), targets) in enumerate(data_loader):
+        # Assuming preprocessing steps are needed before inputting data to the model
+        # Convert the crops and masks into the appropriate tensor format if not already
+        clean_crops = [crop.to(device) for crop in clean_crops]
+        corrupted_crops = [crop.to(device) for crop in corrupted_crops]
+        masks_crops = [mask.to(device) for mask in masks_crops]
+        targets = targets.to(device)
 
-    for i, (inputs, labels) in enumerate(data_loader):
-        if inputs is None:  # Skip batches with no valid data
-            continue
-        
-        for input in inputs:
-            print(len(input))
-            # print(input.shape)
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+        inputs = [corrupted_crops[i] * masks_crops[i] for i in range(len(corrupted_crops))]
+        inputs = torch.cat(inputs, dim=1)  # Concatenate along the channel dimension, adjust as needed
+
+        # Forward pass
         outputs = model(inputs)
-        loss = F.cross_entropy(outputs, labels)
 
+        # Calculate loss
+        loss = F.cross_entropy(outputs, targets)
+
+        # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        if i % 10 == 0:  # Print loss every 10 batches
-            print(f'Epoch {epoch}, Batch {i}, Loss: {loss.item()}')
+        if batch_idx % 10 == 0:
+            print(f'Epoch {epoch}, Batch {batch_idx}, Loss: {loss.item()}')
 
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
