@@ -18,10 +18,10 @@
 #SBATCH --gres=gpu:k80:3
 
 # Walltime (job duration)
-#SBATCH --time=00:15:00
+#SBATCH --time=02:00:00
 
-# Email notifications when the job starts and ends and fails
-#SBATCH --mail-type=BEGIN,END, FAIL
+# Email notifications when the job starts and ends
+#SBATCH --mail-type=BEGIN,END,FAIL
 
 
 #SBATCH --output=/dartfs-hpc/rc/home/g/f0055vg/Vision-Transformer-Based-Audio-Deepfake-Detection/output/test.out

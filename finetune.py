@@ -63,10 +63,27 @@ for param in updated_model.module.parameters():
 updated_model.module.head.weight.requires_grad = True
 updated_model.module.head.bias.requires_grad = True
 
-optimizer = Adam(filter(lambda p: p.requires_grad, updated_model.module.parameters()), lr=1e-4)
+optimizer = Adam(filter(lambda p: p.requires_grad, updated_model.module.parameters()), lr=2e-5)
 
-# Define a loss function
-criterion = nn.CrossEntropyLoss()
+# Number of samples per class
+num_real_samples = 8
+num_fake_samples = 56
+
+# Calculate weights
+# Weight for each class is inversely proportional to its frequency
+total_samples = num_real_samples + num_fake_samples
+weight_for_real = total_samples / (2.0 * num_real_samples)
+weight_for_fake = total_samples / (2.0 * num_fake_samples)
+
+# Create a tensor of weights for Cross Entropy Loss
+class_weights = torch.tensor([weight_for_fake, weight_for_real], dtype=torch.float32)
+
+# If you're using a GPU, you need to move the weights to the GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+class_weights = class_weights.to(device)
+
+# Initialize the loss function with these weights
+criterion = nn.CrossEntropyLoss(weight=class_weights)
 
 dataset = AudioDataset('./dataset.json', './AUDIO/')
 dataloader = torch.utils.data.DataLoader(
